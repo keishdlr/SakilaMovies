@@ -33,7 +33,7 @@ public class App {
         ){
 
             //set its configuration
-            basicDataSource.setUrl("jdbc:mysql://localhost:3306/northwind");
+            basicDataSource.setUrl("jdbc:mysql://localhost:3306/Sakila");
             basicDataSource.setUsername(username);
             basicDataSource.setPassword(password);
 
@@ -42,25 +42,17 @@ public class App {
 
                 System.out.println("""
                         What do you want to do?
-                            1) Display All Products
-                            2) Display All Customers
-                            3) Display All Employees
-                            4) Display All Suppliers
+                            1) Display Actors
+                            2) Display Films
                             0) Exit the dang app
                         """);
 
                 switch (myScanner.nextInt()){
                     case 1:
-                        displayAllProducts(basicDataSource);
+                        displayActors(basicDataSource);
                         break;
                     case 2:
-                        displayAllCustomers(basicDataSource);
-                        break;
-                    case 3:
-                        displayAllEmployees(basicDataSource);
-                        break;
-                    case 4:
-                        displayAllSuppliers(basicDataSource);
+                        displayFilms(basicDataSource);
                         break;
                     case 0:
                         System.out.println("Goodbye!");
@@ -78,7 +70,13 @@ public class App {
 
     }
 
-    public static void displayAllProducts(BasicDataSource basicDataSource){
+    public static void displayActors(BasicDataSource basicDataSource){
+        //added scanner for user input
+        Scanner myScanner = new Scanner(System.in);
+        //ask user
+        System.out.println("Enter an actor last name: ");
+        //user input saved as
+        String lastName = myScanner.nextLine();
 
         //we get to try to run a query and get the results with a prepared statement
         try(
@@ -88,41 +86,55 @@ public class App {
                 //create the prepared statement using the passed in connection
                 PreparedStatement preparedStatement = connection.prepareStatement("""
                         SELECT
-                            ProductName,
-                            UnitPrice,
-                            UnitsInStock,
-                            (UnitPrice * UnitsInStock) AS InventoryValue
+                            ActorID,
+                            FirstName,
+                            LastName,
+                            LastUpdate
                         FROM
-                            Products
+                            Actor
+                        WHERE
+                            LastName = ?
                         ORDER BY
-                            ProductName
+                            ActorID
                         """
                 )
 
-
-
-
         ){
+
+            preparedStatement.setString(1, lastName);
 
             try( ResultSet results = preparedStatement.executeQuery()){
-                //print the results
-                printResults(results);
-            }catch(SQLException e){
-                System.out.println("stuff hit the fan");
+                if (results.next()) {
+                    System.out.println("Your matches are:\n");
+                    do {
+                        int id = results.getInt("ActorID");
+                        String first = results.getString("FirstName");
+                        String last = results.getString("LastName");
+                        Timestamp updated = results.getTimestamp("LastUpdate");
+
+                        System.out.printf("%d: %s %s (Last update: %s)%n",
+                                id, first, last, updated);
+                    } while (results.next());
+                } else {
+                    System.out.println("No matches!");
+                }
             }
-
-
-
-        }catch (SQLException e){
-            System.out.println("Could not get all the products");
+        } catch (SQLException e) {
+            System.out.println("Could not get actors");
             System.exit(1);
         }
-
     }
 
-    public static void displayAllCustomers(BasicDataSource basicDataSource){
+    public static void displayFilms(BasicDataSource basicDataSource) {
+        Scanner myScanner = new Scanner(System.in);
+        //ask user for first and last name save input
+        System.out.print("Enter the actor's first name: ");
+        String firstName = myScanner.nextLine();
+        System.out.print("Enter the actor's last name: ");
+        String lastName = myScanner.nextLine();
+
         //we get to try to run a query and get the results with a prepared statement
-        try(
+        try (
 
                 //get a connection from the pool
                 Connection connection = basicDataSource.getConnection();
@@ -130,97 +142,39 @@ public class App {
                 //create the prepared statement using the passed in connection
                 PreparedStatement preparedStatement = connection.prepareStatement("""
                         SELECT
-                            ContactName,
-                            CompanyName,
-                            City,
-                            Country,
-                            Phone
+                            title
                         FROM
-                            Customers
+                            film
+                        JOIN film_actor ON film.film_id = film-actor.film_id
+                        JOIN actor ON film-actor.actor_id = actor.actor_id
+                        WHERE
+                            actor.FirstName = ? AND actor.LastName = ?
                         ORDER BY
-                            Country
+                            film.title
                         """
                 );
 
-                //get the results from the query
-                ResultSet results = preparedStatement.executeQuery()
 
-        ){
-
-            //print the results
-            printResults(results);
-
-        }catch (SQLException e){
-            System.out.println("Could not get all the customers");
-            System.exit(1);
+        ) {
+            //get the results from the query
+            try (ResultSet results = preparedStatement.executeQuery()) {
+                if (results.next()) {
+                    System.out.println("Your matches are:\n");
+                    do {
+                        System.out.printf("%d: %s %s%n",
+                                results.getInt("actor_id"),
+                                results.getString("first_name"),
+                                results.getString("last_name"));
+                    } while (results.next());
+                } else {
+                    System.out.println("No matches!");
+                }
+            } catch (SQLException e) {
+                System.out.println("Could not get all the customers");
+                System.exit(1);
+            }
         }
     }
-
-    public static void displayAllEmployees(BasicDataSource basicDataSource){
-        //we get to try to run a query and get the results with a prepared statement
-        try(
-
-                //get a connection from the pool
-                Connection connection = basicDataSource.getConnection();
-
-                //create the prepared statement using the passed in connection
-                PreparedStatement preparedStatement = connection.prepareStatement("""
-                        SELECT
-                            FirstName,
-                            LastName,
-                            Title,
-                            Salary
-                        FROM
-                            Employees
-                        ORDER BY
-                            Salary DESC
-                        """
-                );
-
-                //get the results from the query
-                ResultSet results = preparedStatement.executeQuery()
-
-        ){
-
-            //print the results
-            printResults(results);
-
-        }catch (SQLException e){
-            System.out.println("Could not get all the employees");
-            System.exit(1);
-        }
-    }
-
-    public static void displayAllSuppliers(BasicDataSource basicDataSource){
-        //we get to try to run a query and get the results with a prepared statement
-        try(
-                //get a connection from the pool
-                Connection connection = basicDataSource.getConnection();
-
-                //create the prepared statement using the passed in connection
-                PreparedStatement preparedStatement = connection.prepareStatement("""
-                        SELECT
-                           *
-                        FROM
-                            Suppliers
-                        """
-                );
-
-                //get the results from the query
-                ResultSet results = preparedStatement.executeQuery()
-
-        ){
-
-            //print the results
-            printResults(results);
-
-        }catch (SQLException e){
-            System.out.println("Could not get all the Suppliers");
-            System.exit(1);
-        }
-    }
-
-
     //this method will be used in the displayMethods to actually print the results to the screen
     public static void printResults(ResultSet results) throws SQLException {
         //get the metadata so we have access to the field names
