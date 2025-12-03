@@ -106,6 +106,7 @@ public class App {
             try( ResultSet results = preparedStatement.executeQuery()){
                 if (results.next()) {
                     System.out.println("Your matches are:\n");
+                    printResults(results);
                     do {
                         int id = results.getInt("ActorID");
                         String first = results.getString("FirstName");
@@ -152,29 +153,30 @@ public class App {
                         ORDER BY
                             film.title
                         """
-                );
-
-
+                )
         ) {
+            preparedStatement.setString(1, firstName);
+            preparedStatement.setString(2, lastName);
+
             //get the results from the query
             try (ResultSet results = preparedStatement.executeQuery()) {
                 if (results.next()) {
-                    System.out.println("Your matches are:\n");
+                    System.out.println("Films featuring " + firstName + " " + lastName + ":\n");
+                    printResults(results);
                     do {
-                        System.out.printf("%d: %s %s%n",
-                                results.getInt("actor_id"),
-                                results.getString("first_name"),
-                                results.getString("last_name"));
+                        String title = results.getString("title");
+                        System.out.println(title);
                     } while (results.next());
                 } else {
-                    System.out.println("No matches!");
+                    System.out.println("No films found for that actor!");
                 }
-            } catch (SQLException e) {
-                System.out.println("Could not get all the customers");
-                System.exit(1);
             }
+        } catch (SQLException e) {
+            System.out.println("Could not get films");
+            System.exit(1);
         }
     }
+
     //this method will be used in the displayMethods to actually print the results to the screen
     public static void printResults(ResultSet results) throws SQLException {
         //get the metadata so we have access to the field names
