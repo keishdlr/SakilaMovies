@@ -1,7 +1,10 @@
 package com.pluralsight;
 
+import com.pluralsight.DAO.ActorDAO;
+import com.pluralsight.models.Actor;
 import org.apache.commons.dbcp2.BasicDataSource;
 
+import java.util.ArrayList;
 import java.util.Scanner;
 import java.sql.*;
 
@@ -37,6 +40,7 @@ public class App {
             basicDataSource.setUsername(username);
             basicDataSource.setPassword(password);
 
+            ActorDAO actorDAO = new ActorDAO(basicDataSource);
 
             while(true){
 
@@ -44,18 +48,26 @@ public class App {
                         What do you want to do?
                             1) Search by actor last name
                             2) Search by actor full name
-                            0) Exit the dang app
+                            3) Display All actors
+                            4) Search Actor by ID
+                            0) Exit the app
                         """);
 
                 switch (myScanner.nextInt()){
                     case 1:
-                        displayActors(basicDataSource);
+                        searchLastName(basicDataSource);
                         break;
                     case 2:
-                        displayFilms(basicDataSource);
+                        searchFullName(basicDataSource);
+                        break;
+                    case 3:
+                        DisplayAllActors(actorDAO);
+                        break;
+                    case 4:
+                        GetByID(actorDAO);
                         break;
                     case 0:
-                        System.out.println("Goodbye!");
+                        System.out.println("See ya!");
                         System.exit(0);
                     default:
                         System.out.println("invalid choice");
@@ -70,7 +82,18 @@ public class App {
 
     }
 
-    public static void displayActors(BasicDataSource basicDataSource){
+    //use actor DAO
+    public static void DisplayAllActors(ActorDAO actorDAO){
+        ArrayList<Actor> actors = actorDAO.getAllActors();
+        actors.forEach(System.out::println);
+    }
+
+    public static void GetByID(ActorDAO actorDAO){
+        ArrayList<Actor> actorsID = actorDAO.getActorbyID(int actor_id);
+        actorsID.forEach(System.out::println);
+    }
+
+    public static void searchLastName(BasicDataSource basicDataSource){
         //added scanner for user input
         Scanner myScanner = new Scanner(System.in);
         //ask user
@@ -98,36 +121,25 @@ public class App {
                             Actor_ID
                         """
                 )
+
         ){
             preparedStatement.setString(1, lastName);
-
-
 
             try( ResultSet results = preparedStatement.executeQuery()){
                 if (results.next()) {
                     System.out.println("Your matches are:\n");
-
-                        int id = results.getInt("Actor_ID");
-                        String first = results.getString("First_Name");
-                        String last = results.getString("Last_Name");
-                        Timestamp updated = results.getTimestamp("Last_Update");
-
-                        System.out.printf("%d: %s %s (Last update: %s)%n",
-                                id, first, last, updated);
                         printResults(results);
                 } else {
                     System.out.println("No matches found!");
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
-           System.out.println("ERROR: Could not get actors");
+           System.out.println("ERROR: " + e);
            System.exit(1);
-
         }
     }
 
-    public static void displayFilms(BasicDataSource basicDataSource) {
+    public static void searchFullName(BasicDataSource basicDataSource) {
         Scanner myScanner = new Scanner(System.in);
         //ask user for first and last name save input
         System.out.print("Enter the actor's first name: ");
@@ -162,14 +174,13 @@ public class App {
             //get the results from the query
             try (ResultSet results = preparedStatement.executeQuery()) {
                 if (results.next()) {
-                    System.out.println("Films featuring " + firstName + " " + lastName + ":\n");
                     printResults(results);
                 } else {
-                    System.out.println("No films found for that actor!");
+                    System.out.println("Nothing found!");
                 }
             }
         } catch (SQLException e) {
-            System.out.println("Could not get films");
+            System.out.println("Could not get actors");
             System.exit(1);
         }
     }
