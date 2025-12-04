@@ -42,8 +42,8 @@ public class App {
 
                 System.out.println("""
                         What do you want to do?
-                            1) Display Actors
-                            2) Display Films
+                            1) Search by actor last name
+                            2) Search by actor full name
                             0) Exit the dang app
                         """);
 
@@ -81,10 +81,11 @@ public class App {
         //we get to try to run a query and get the results with a prepared statement
         try(
                 //get a connection from the pool
-                Connection connection = basicDataSource.getConnection();
+                Connection conn = basicDataSource.getConnection();
+
 
                 //create the prepared statement using the passed in connection
-                PreparedStatement preparedStatement = connection.prepareStatement("""
+                PreparedStatement preparedStatement = conn.prepareStatement("""
                         SELECT
                             ActorID,
                             FirstName,
@@ -138,10 +139,10 @@ public class App {
         try (
 
                 //get a connection from the pool
-                Connection connection = basicDataSource.getConnection();
+                Connection conn = basicDataSource.getConnection();
 
                 //create the prepared statement using the passed in connection
-                PreparedStatement preparedStatement = connection.prepareStatement("""
+                PreparedStatement preparedStatement = conn.prepareStatement("""
                         SELECT
                             title
                         FROM
