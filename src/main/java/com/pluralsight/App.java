@@ -101,27 +101,28 @@ public class App {
         ){
             preparedStatement.setString(1, lastName);
 
+
+
             try( ResultSet results = preparedStatement.executeQuery()){
                 if (results.next()) {
                     System.out.println("Your matches are:\n");
-                    printResults(results);
-                    do {
+
                         int id = results.getInt("Actor_ID");
-                        String first = results.getString("FirstName");
-                        String last = results.getString("LastName");
-                        Timestamp updated = results.getTimestamp("LastUpdate");
+                        String first = results.getString("First_Name");
+                        String last = results.getString("Last_Name");
+                        Timestamp updated = results.getTimestamp("Last_Update");
 
                         System.out.printf("%d: %s %s (Last update: %s)%n",
                                 id, first, last, updated);
-                    } while (results.next());
+                        printResults(results);
                 } else {
                     System.out.println("No matches found!");
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
-           // System.out.println("ERROR: Could not get actors");
-            //System.exit(1);
+           System.out.println("ERROR: Could not get actors");
+           System.exit(1);
 
         }
     }
