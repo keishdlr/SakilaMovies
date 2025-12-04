@@ -74,7 +74,7 @@ public class App {
         //added scanner for user input
         Scanner myScanner = new Scanner(System.in);
         //ask user
-        System.out.println("Enter an actor last name: ");
+        System.out.println("Enter the actor last name: ");
         //user input saved as
         String lastName = myScanner.nextLine();
 
@@ -83,25 +83,22 @@ public class App {
                 //get a connection from the pool
                 Connection conn = basicDataSource.getConnection();
 
-
                 //create the prepared statement using the passed in connection
                 PreparedStatement preparedStatement = conn.prepareStatement("""
                         SELECT
-                            ActorID,
-                            FirstName,
-                            LastName,
-                            LastUpdate
+                            Actor_ID,
+                            First_Name,
+                            Last_Name,
+                            Last_Update
                         FROM
                             Actor
                         WHERE
-                            LastName = ?
+                            Last_Name = ?
                         ORDER BY
-                            ActorID
+                            Actor_ID
                         """
                 )
-
         ){
-
             preparedStatement.setString(1, lastName);
 
             try( ResultSet results = preparedStatement.executeQuery()){
@@ -109,7 +106,7 @@ public class App {
                     System.out.println("Your matches are:\n");
                     printResults(results);
                     do {
-                        int id = results.getInt("ActorID");
+                        int id = results.getInt("Actor_ID");
                         String first = results.getString("FirstName");
                         String last = results.getString("LastName");
                         Timestamp updated = results.getTimestamp("LastUpdate");
@@ -118,12 +115,14 @@ public class App {
                                 id, first, last, updated);
                     } while (results.next());
                 } else {
-                    System.out.println("No matches!");
+                    System.out.println("No matches found!");
                 }
             }
         } catch (SQLException e) {
-            System.out.println("Could not get actors");
-            System.exit(1);
+            e.printStackTrace();
+           // System.out.println("ERROR: Could not get actors");
+            //System.exit(1);
+
         }
     }
 
@@ -147,10 +146,10 @@ public class App {
                             title
                         FROM
                             film
-                        JOIN film_actor ON film.film_id = film-actor.film_id
-                        JOIN actor ON film-actor.actor_id = actor.actor_id
+                        JOIN film_actor ON film.film_id = film_actor.film_id
+                        JOIN actor ON film_actor.actor_id = actor.actor_id
                         WHERE
-                            actor.FirstName = ? AND actor.LastName = ?
+                            actor.First_Name = ? AND actor.Last_Name = ?
                         ORDER BY
                             film.title
                         """
@@ -164,10 +163,6 @@ public class App {
                 if (results.next()) {
                     System.out.println("Films featuring " + firstName + " " + lastName + ":\n");
                     printResults(results);
-                    do {
-                        String title = results.getString("title");
-                        System.out.println(title);
-                    } while (results.next());
                 } else {
                     System.out.println("No films found for that actor!");
                 }
@@ -186,23 +181,24 @@ public class App {
         int columnCount = metaData.getColumnCount();
 
         //this is looping over all the results from the DB
-        while(results.next()){
-
-            //loop over each column in the row and display the data
-            for (int i = 1; i <= columnCount; i++) {
-                //gets the current colum name
-                String columnName = metaData.getColumnName(i);
-                //get the current column value
-                String value = results.getString(i);
-                //print out the column name and column value
-                System.out.println(columnName + ": " + value + " ");
-            }
-
-            //print an empty line to make the results prettier
-            System.out.println();
-
+        // do while loop to avoid the "After end result set" exception
+        {
+            // print the current row first
+            do {
+                //loop over each column in the row and display the data
+                for (int i = 1; i <= columnCount; i++) {
+                    //gets the current colum name
+                    String columnName = metaData.getColumnName(i);
+                    //get the current column value
+                    String value = results.getString(i);
+                    //print out the column name and column value
+                    System.out.println(columnName + ": " + value + " ");
+                    System.out.println("---------------------------------------------------------");
+                }
+                //print an empty line to make the results prettier
+                System.out.println();
+                //then move to the next row
+            } while(results.next());
         }
-
     }
-
 }
