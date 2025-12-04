@@ -98,6 +98,7 @@ public class ActorDAO {
                 while(results.next()) {
                     //create the new object from the results
                     actor = new Actor(
+
                             results.getString("first_name"),
                             results.getString("last_name"),
                             results.getInt("actor_id")
