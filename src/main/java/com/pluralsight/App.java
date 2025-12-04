@@ -49,7 +49,7 @@ public class App {
                             1) Search by actor last name
                             2) Search by actor full name
                             3) Display All actors
-                            4) Search Actor by ID
+                            4) GetByID
                             0) Exit the app
                         """);
 
@@ -65,7 +65,6 @@ public class App {
                         break;
                     case 4:
                         GetByID(actorDAO);
-                        break;
                     case 0:
                         System.out.println("See ya!");
                         System.exit(0);
@@ -86,11 +85,6 @@ public class App {
     public static void DisplayAllActors(ActorDAO actorDAO){
         ArrayList<Actor> actors = actorDAO.getAllActors();
         actors.forEach(System.out::println);
-    }
-
-    public static void GetByID(ActorDAO actorDAO){
-        ArrayList<Actor> actorsID = actorDAO.getActorbyID(int actor_id);
-        actorsID.forEach(System.out::println);
     }
 
     public static void searchLastName(BasicDataSource basicDataSource){
@@ -136,6 +130,21 @@ public class App {
         } catch (SQLException e) {
            System.out.println("ERROR: " + e);
            System.exit(1);
+        }
+    }
+
+    public static void GetByID(ActorDAO actorDAO) {
+        Scanner myScanner = new Scanner(System.in);
+
+        System.out.print("Enter actor ID: ");
+
+        int actorId = myScanner.nextInt();
+        Actor actor = actorDAO.getActorbyID(actorId);
+
+        if (actor != null) {
+            System.out.println(actor);
+        } else {
+            System.out.println("No actor found with ID: " + actorId);
         }
     }
 
